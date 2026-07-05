@@ -1,8 +1,10 @@
 import { TaiwanWatchInfo } from '../types';
+import { getProviderDeepLink } from '../services/providerLinks';
 import ProviderLogo from './ProviderLogo';
 
 interface ProviderSectionProps {
   watch: TaiwanWatchInfo;
+  title: string;
 }
 
 const CATEGORIES: { key: keyof Omit<TaiwanWatchInfo, 'link'>; label: string }[] = [
@@ -13,7 +15,7 @@ const CATEGORIES: { key: keyof Omit<TaiwanWatchInfo, 'link'>; label: string }[] 
 ];
 
 /** 詳細頁的台灣 OTT 平台區塊：依 訂閱 / 免費 / 租借 / 購買 分類顯示 */
-export default function ProviderSection({ watch }: ProviderSectionProps) {
+export default function ProviderSection({ watch, title }: ProviderSectionProps) {
   const hasAny = CATEGORIES.some(({ key }) => watch[key].length > 0);
 
   if (!hasAny) {
@@ -21,7 +23,7 @@ export default function ProviderSection({ watch }: ProviderSectionProps) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 rounded-2xl bg-gray-50 p-4 sm:p-5">
       {CATEGORIES.map(({ key, label }) => {
         const providers = watch[key];
         if (providers.length === 0) return null;
@@ -30,23 +32,18 @@ export default function ProviderSection({ watch }: ProviderSectionProps) {
             <h3 className="mb-2 text-sm font-medium text-gray-500">{label}</h3>
             <div className="flex flex-wrap gap-x-5 gap-y-3">
               {providers.map((p) => (
-                <ProviderLogo key={p.id} provider={p} showName />
+                <ProviderLogo
+                  key={p.id}
+                  provider={p}
+                  showName
+                  href={getProviderDeepLink(p.name, title) ?? watch.link ?? undefined}
+                />
               ))}
             </div>
           </div>
         );
       })}
-      {watch.link && (
-        <a
-          href={watch.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex min-h-[44px] items-center rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700"
-        >
-          前往觀看資訊 ↗
-        </a>
-      )}
-      <p className="text-xs text-gray-400">觀看平台資料由 TMDB / JustWatch 提供，可能隨時變動。</p>
+      <p className="text-xs text-gray-400">觀看平台資料由 TMDB / JustWatch 提供，可能隨時變動；點擊平台圖示會前往該平台搜尋此作品。</p>
     </div>
   );
 }

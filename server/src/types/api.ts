@@ -27,6 +27,8 @@ export interface SearchResultItem {
   overview: string;
   /** 台灣可觀看平台摘要（訂閱/免費優先，最多 6 個） */
   providers: Provider[];
+  /** TMDB 提供的 JustWatch 觀看資訊連結，供對照表查無平台時 fallback 使用 */
+  link: string | null;
 }
 
 export interface SearchResponse {

@@ -126,7 +126,7 @@ function DetailContent({ detail }: { detail: MediaDetail }) {
 
         {/* 台灣 OTT 平台 */}
         <Section title="在台灣哪裡看">
-          <ProviderSection watch={detail.watch} />
+          <ProviderSection watch={detail.watch} title={detail.title} />
         </Section>
 
         {/* 劇情 */}

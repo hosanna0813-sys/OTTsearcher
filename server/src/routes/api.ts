@@ -34,9 +34,14 @@ import { TTL, TTLCache } from '../utils/cache';
 
 const router = Router();
 
+interface ProviderSummary {
+  providers: Provider[];
+  link: string | null;
+}
+
 const searchCache = new TTLCache<SearchResponse>(300);
 const detailCache = new TTLCache<MediaDetail>(300);
-const providerCache = new TTLCache<Provider[]>(1000);
+const providerCache = new TTLCache<ProviderSummary>(1000);
 
 function handleError(res: Response, err: unknown): void {
   if (err instanceof TmdbError) {
@@ -49,19 +54,23 @@ function handleError(res: Response, err: unknown): void {
   res.status(500).json({ error: '目前暫時無法取得資料，請稍後再試。' });
 }
 
-/** 取得單一作品的台灣平台摘要（失敗時回空陣列，不影響整體搜尋結果） */
-async function fetchProviderSummary(mediaType: MediaType, id: number): Promise<Provider[]> {
+/** 取得單一作品的台灣平台摘要與 JustWatch 連結（失敗時回空結果，不影響整體搜尋結果） */
+async function fetchProviderSummary(mediaType: MediaType, id: number): Promise<ProviderSummary> {
   const cacheKey = `${mediaType}:${id}`;
   const cached = providerCache.get(cacheKey);
   if (cached) return cached;
   try {
     const data = await getWatchProviders(mediaType, id);
-    const summary = toProviderSummary(data.results?.[REGION]);
+    const region = data.results?.[REGION];
+    const summary: ProviderSummary = {
+      providers: toProviderSummary(region),
+      link: region?.link ?? null,
+    };
     providerCache.set(cacheKey, summary, TTL.PROVIDERS);
     return summary;
   } catch (err) {
     console.error(`[TMDB] watch/providers failed for ${cacheKey}:`, err);
-    return [];
+    return { providers: [], link: null };
   }
 }
 
@@ -89,14 +98,14 @@ router.get('/search', async (req: Request, res: Response) => {
     const raw = await searchMulti(query, page);
     const items = raw.results
       .map(toSearchResultItem)
-      .filter((item): item is Omit<SearchResultItem, 'providers'> => item !== null);
+      .filter((item): item is Omit<SearchResultItem, 'providers' | 'link'> => item !== null);
 
     // 並行查每筆結果的台灣平台摘要（有 6 小時快取，重複作品幾乎零成本）
     const withProviders: SearchResultItem[] = await Promise.all(
-      items.map(async (item) => ({
-        ...item,
-        providers: await fetchProviderSummary(item.mediaType, item.id),
-      }))
+      items.map(async (item) => {
+        const { providers, link } = await fetchProviderSummary(item.mediaType, item.id);
+        return { ...item, providers, link };
+      })
     );
 
     const response: SearchResponse = {

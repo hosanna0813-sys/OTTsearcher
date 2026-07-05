@@ -21,6 +21,7 @@ export interface SearchResultItem {
   voteAverage: number;
   overview: string;
   providers: Provider[];
+  link: string | null;
 }
 
 export interface SearchResponse {

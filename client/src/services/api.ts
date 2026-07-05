@@ -30,16 +30,16 @@ export class ApiError extends Error {
 const cache = new Map<string, unknown>();
 const inflight = new Map<string, Promise<unknown>>();
 
-async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
-  if (cache.has(url)) return cache.get(url) as T;
-
-  // 同一 URL 已有進行中的請求時直接共用，避免重複打後端
+function fetchShared<T>(url: string): Promise<T> {
+  // 同一 URL 已有進行中的請求時直接共用，避免重複打後端。
+  // 這個共用的 fetch 刻意不綁任何呼叫端的 AbortSignal——否則某個呼叫端
+  // 取消時會連帶砍掉其他還在等待同一個 URL 的呼叫端（見下方 fetchJson）。
   const pending = inflight.get(url);
   if (pending) return pending as Promise<T>;
 
   const promise = (async () => {
     try {
-      const res = await fetch(url, { signal });
+      const res = await fetch(url);
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { error?: string } | null;
         throw new ApiError(res.status, body?.error ?? '目前暫時無法取得資料，請稍後再試。');
@@ -54,6 +54,34 @@ async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
 
   inflight.set(url, promise);
   return promise;
+}
+
+async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
+  if (cache.has(url)) return cache.get(url) as T;
+
+  const shared = fetchShared<T>(url);
+  if (!signal) return shared;
+
+  // 呼叫端自己的 AbortSignal 只讓「這一次呼叫」提早以 AbortError reject，
+  // 不會影響共用中的底層請求或其他還在等待的呼叫端。
+  return new Promise<T>((resolve, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException('Aborted', 'AbortError'));
+      return;
+    }
+    const onAbort = () => reject(new DOMException('Aborted', 'AbortError'));
+    signal.addEventListener('abort', onAbort);
+    shared.then(
+      (data) => {
+        signal.removeEventListener('abort', onAbort);
+        resolve(data);
+      },
+      (err: unknown) => {
+        signal.removeEventListener('abort', onAbort);
+        reject(err);
+      }
+    );
+  });
 }
 
 export function searchMedia(query: string, page = 1, signal?: AbortSignal): Promise<SearchResponse> {

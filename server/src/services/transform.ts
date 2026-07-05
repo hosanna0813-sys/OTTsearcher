@@ -70,7 +70,9 @@ function extractYear(date: string | undefined): string {
 }
 
 /** multi search 結果 → 搜尋卡片（person 或缺 id 的項目回傳 null） */
-export function toSearchResultItem(raw: TmdbSearchResult): Omit<SearchResultItem, 'providers'> | null {
+export function toSearchResultItem(
+  raw: TmdbSearchResult
+): Omit<SearchResultItem, 'providers' | 'link'> | null {
   if (raw.media_type !== 'movie' && raw.media_type !== 'tv') return null;
   const isMovie = raw.media_type === 'movie';
   return {
