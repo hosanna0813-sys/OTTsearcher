@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: taiwan-ott-searcher
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: TMDB_API_KEY
+        sync: false # 部署時需在 Render Dashboard 手動填入
+      - key: NODE_ENV
+        value: production

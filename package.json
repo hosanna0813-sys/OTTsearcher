@@ -1,0 +1,19 @@
+{
+  "name": "taiwan-ott-searcher",
+  "version": "1.0.0",
+  "private": true,
+  "description": "台灣 OTT 搜尋平台 — 搜尋電影與影集，在台灣哪裡可以看",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "dev": "concurrently -n server,client -c blue,green \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "build": "npm run install:all && npm --prefix server run build && npm --prefix client run build",
+    "start": "npm --prefix server run start",
+    "lint": "npm --prefix server run lint && npm --prefix client run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}
