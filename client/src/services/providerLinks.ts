@@ -26,6 +26,7 @@ const PROVIDER_LINK_RULES: ProviderLinkRule[] = [
   { match: ['line tv'], url: (q) => `https://www.linetv.tw/search?word=${q}` },
   { match: ['hami'], url: (q) => `https://hamivideo.hinet.net/search.do?keyword=${q}` },
   { match: ['max', 'hbo'], url: (q) => `https://www.max.com/search?q=${q}` },
+  { match: ['crunchyroll'], url: (q) => `https://www.crunchyroll.com/search?q=${q}` },
 ];
 
 /** 依平台名稱組出「該平台搜尋此片名」的網址，對照不到時回傳 null */
