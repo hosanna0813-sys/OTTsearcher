@@ -19,7 +19,7 @@ export default function ProviderSection({ watch, title }: ProviderSectionProps) 
   const hasAny = CATEGORIES.some(({ key }) => watch[key].length > 0);
 
   if (!hasAny) {
-    return <p className="text-gray-500">目前未找到台灣串流平台資訊</p>;
+    return <p className="text-base font-medium text-gray-500">目前未找到台灣串流平台資訊</p>;
   }
 
   return (
