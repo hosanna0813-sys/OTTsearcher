@@ -72,7 +72,10 @@ export default function ResultCard({ item }: ResultCardProps) {
               </div>
             </>
           ) : (
-            <p className="text-sm font-medium text-gray-500">目前未找到台灣串流平台資訊</p>
+            <p className="flex items-center gap-1.5 text-sm font-medium text-gray-500">
+              <span aria-hidden="true">📺</span>
+              目前未找到台灣串流平台資訊
+            </p>
           )}
         </div>
       </div>
